@@ -41,11 +41,6 @@ export class PrismaController {
     });
   }
 
-  @Post('user')
-  async signupUser(@Body() userData: { email: string }): Promise<UserModel> {
-    return this.userService.createUser(userData);
-  }
-
   @Put('list/:id')
   async updateList(
     @Param('id') id: string,
@@ -60,5 +55,17 @@ export class PrismaController {
   @Delete('list/:id')
   async deleteList(@Param('id') id: string): Promise<ListModel> {
     return this.listService.deleteList({ where: { id: Number(id) } });
+  }
+
+  @Post('user')
+  async signupUser(
+    @Body() userData: { email: string; password: string },
+  ): Promise<UserModel> {
+    return this.userService.createUser(userData);
+  }
+
+  @Get('user')
+  async getAllUsers(): Promise<UserModel[]> {
+    return this.userService.users({});
   }
 }

@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller('prefixo')
+@Controller()
 export class AppController {
   //                           coloca o injetável como argumento
   constructor(private readonly appService: AppService) {}
 
-  @Get('test')
+  @Get()
   getHello(): string {
     return this.appService.getHello();
   }
