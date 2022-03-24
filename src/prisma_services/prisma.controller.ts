@@ -30,7 +30,7 @@ export class PrismaController {
 
   @Post('list')
   async createList(
-    @Body() listData: { text: string; userId?: number },
+    @Body() listData: { text: string; userId: number },
   ): Promise<ListModel> {
     const { text, userId } = listData;
     return this.listService.createList({
@@ -57,7 +57,7 @@ export class PrismaController {
     });
   }
 
-  @Delete('post/:id')
+  @Delete('list/:id')
   async deleteList(@Param('id') id: string): Promise<ListModel> {
     return this.listService.deleteList({ where: { id: Number(id) } });
   }
