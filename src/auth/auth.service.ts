@@ -4,6 +4,7 @@ import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Tokens } from './types/tokens.types';
 import { JwtService } from '@nestjs/jwt';
+import { prisma } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -42,6 +43,18 @@ export class AuthService {
       refresh_token: rt,
     };
   }
+
+  async updateHashRt(userId: number, rt: string) {
+    const hash = await this.hashData(rt);
+    await this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedRt: hash,
+      },
+    });
+  }
   async signinLocal() {}
   async signupLocal(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
@@ -51,6 +64,9 @@ export class AuthService {
         hash,
       },
     });
+    const tokens = await this.getTokens(newUser.id, newUser.email);
+    await this.updateHashRt(newUser.id, tokens.refresh_token);
+    return tokens;
   }
   async logoutLocal() {}
   async refreshTokens() {}
