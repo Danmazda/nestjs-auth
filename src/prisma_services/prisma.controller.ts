@@ -59,7 +59,7 @@ export class PrismaController {
 
   @Post('user')
   async signupUser(
-    @Body() userData: { email: string; password: string },
+    @Body() userData: { email: string; hash: string },
   ): Promise<UserModel> {
     return this.userService.createUser(userData);
   }
