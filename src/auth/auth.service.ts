@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma_services/prisma.service';
 import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Tokens } from './types/tokens.types';
 import { JwtService } from '@nestjs/jwt';
-import { prisma } from '@prisma/client';
+import { prisma, User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +55,20 @@ export class AuthService {
       },
     });
   }
-  async signinLocal() {}
+  async signinLocal(dto: AuthDto): Promise<Tokens> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+    if (!user) throw new ForbiddenException('Acccess Denied');
+    const compare = await bcrypt.compare(dto.password, user.hash);
+    if (!compare) throw new ForbiddenException('Access Denied');
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateHashRt(user.id, tokens.refresh_token);
+    return tokens;
+  }
+
   async signupLocal(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
     const newUser = await this.prismaService.user.create({
@@ -68,6 +81,21 @@ export class AuthService {
     await this.updateHashRt(newUser.id, tokens.refresh_token);
     return tokens;
   }
-  async logoutLocal() {}
+
+  //updateMany porque update só aceita campos unique
+  async logoutLocal(userId: number) {
+    await this.prismaService.user.updateMany({
+      where: {
+        id: userId,
+        hashedRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRt: null,
+      },
+    });
+  }
+
   async refreshTokens() {}
 }
