@@ -4,7 +4,6 @@ import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Tokens } from './types/tokens.types';
 import { JwtService } from '@nestjs/jwt';
-import { prisma, User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -97,5 +96,17 @@ export class AuthService {
     });
   }
 
-  async refreshTokens() {}
+  async refreshTokens(userId: number, rt: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) throw new ForbiddenException('Access Denied');
+    const checkedHash = await bcrypt.compare(rt, user.hashedRt);
+    if (!checkedHash) throw new ForbiddenException('Access Denied');
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateHashRt(user.id, tokens.refresh_token);
+    return tokens;
+  }
 }

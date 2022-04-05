@@ -8,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '@prisma/client';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
@@ -41,7 +40,11 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('/refresh')
   @HttpCode(HttpStatus.OK)
-  async refreshTokens() {
-    return await this.authService.refreshTokens();
+  async refreshTokens(@Req() req: Request): Promise<Tokens> {
+    const user = req.user;
+    return await this.authService.refreshTokens(
+      user['sub'],
+      user['refreshToken'],
+    );
   }
 }
